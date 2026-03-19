@@ -28,8 +28,8 @@ class App(ctk.CTk):
         top_toolbar.grid(row=0, column=0, sticky="ew")
         top_toolbar.grid_propagate(False)
 
-        search_bar = ctk.CTkEntry(top_toolbar, placeholder_text="Search for passwords...")
-        search_bar.pack(side="left", fill="x", expand=True, padx=(0,5))
+        self.search_bar = ctk.CTkEntry(top_toolbar, placeholder_text="Search for passwords...")
+        self.search_bar.pack(side="left", fill="x", expand=True, padx=(0,5))
         
         main_content = ctk.CTkFrame(master=self, fg_color="#212b38", corner_radius=0)
         main_content.grid(row=1, column=0, sticky="nsew")
@@ -38,14 +38,19 @@ class App(ctk.CTk):
         self.scrollable.pack(fill="both", expand=True, padx=10, pady=10)
 
         self.load_passwords()
+        self.search_bar.bind("<KeyRelease>", lambda e: self.on_search())
 
 
-    def load_passwords(self):
+    def load_passwords(self, passwords=None):
+            if passwords == None:
+                passwords=self.passwords
+
             for row in self.password_rows:
                 row.pack_forget()
+
             self.password_rows.clear()
 
-            for p in self.passwords:
+            for p in passwords:
                 row_frame = ctk.CTkFrame(self.scrollable)
                 row_frame.pack(fill="x", pady=2, padx=5)
 
@@ -93,6 +98,23 @@ class App(ctk.CTk):
               pass_entry.configure(show="•")
         else:
             pass_entry.configure(show="")
+
+    def filter_pass(self, query):
+        query=query.strip().lower();
+        if not query:
+            return self.passwords
+        filtered = [p for p in self.passwords 
+                   if query in p["site"].lower() or 
+                   query in p["username"].lower()]
+        return filtered
+    
+    def on_search(self):
+        query = self.search_bar.get()
+        filtered_passwords = self.filter_pass(query)
+        self.load_passwords(filtered_passwords)
+                 
+                 
+         
 
 if __name__ == "__main__":
     app = App()
