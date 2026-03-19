@@ -9,6 +9,7 @@ class App(ctk.CTk):
         super().__init__()
         
         self.password_rows = []
+        self.api_url = "http://localhost:8000"  # API endpoint
        
         # fake data
         self.passwords = [
@@ -30,6 +31,12 @@ class App(ctk.CTk):
 
         self.search_bar = ctk.CTkEntry(top_toolbar, placeholder_text="Search for passwords...")
         self.search_bar.pack(side="left", fill="x", expand=True, padx=(0,5))
+
+        self.add_pass_btn = ctk.CTkButton(top_toolbar, height=30, width=40, fg_color="#45136b", text="ADD PASSWORD") #command=self.open_pass_add
+        self.add_pass_btn.pack(side="right", padx=(0,5))
+
+        self.sync_btn = ctk.CTkButton(top_toolbar, height=30, width=20, fg_color="#ff0073", text="SYNC", command=self.sync)
+        self.sync_btn.pack(side="right", padx=10)
         
         main_content = ctk.CTkFrame(master=self, fg_color="#212b38", corner_radius=0)
         main_content.grid(row=1, column=0, sticky="nsew")
@@ -46,7 +53,7 @@ class App(ctk.CTk):
                 passwords=self.passwords
 
             for row in self.password_rows:
-                row.pack_forget()
+                row.destroy()
 
             self.password_rows.clear()
 
@@ -87,6 +94,15 @@ class App(ctk.CTk):
                 
                 self.password_rows.append(row_frame)
 
+    def sync(self):
+        try:
+            r = requests.post("http://localhost:8000/api/passwords", json=self.passwords)
+            self.passwords = r.json()["passwords"]
+            #vault_data = r.json()["encrypted_vault"]
+            self.load_passwords()
+            print(f"Synced! Total: {len(self.passwords)}")
+        except:
+            print("Sync failed {e}")
 
     def copy_pass(self, p):
          self.clipboard_clear()
@@ -117,5 +133,5 @@ class App(ctk.CTk):
          
 
 if __name__ == "__main__":
-    app = App()
-    app.mainloop()
+    tk_app = App()
+    tk_app.mainloop()
